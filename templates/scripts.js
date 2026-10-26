@@ -587,7 +587,7 @@ function openPdfModal(title, artist, pdfUrl) {
 // =========================================================
 // 4. MODAL DE EDICIÓN RÁPIDA DE CANCIÓN
 // =========================================================
-function openEditSongModal(id, title, artist, duration, isActive, tagIds) {
+function openEditSongModal(id, title, artist, duration, isActive, tagIds, fileName, fileUrl, audioName, audioUrl) {
   const modalEl = document.getElementById('editSongModal');
   if (!modalEl) return;
 
@@ -600,11 +600,55 @@ function openEditSongModal(id, title, artist, duration, isActive, tagIds) {
   const artistInput = document.getElementById('edit-song-artist');
   const durationInput = document.getElementById('edit-song-duration');
   const activeInput = document.getElementById('editIsActiveCheck');
+  const fileInput = document.getElementById('edit-song-file');
+  const audioInput = document.getElementById('edit-song-audio');
+  const clearFileCheck = document.getElementById('clearFileCheck');
+  const clearAudioCheck = document.getElementById('clearAudioCheck');
 
   if (titleInput) titleInput.value = title;
   if (artistInput) artistInput.value = artist;
   if (durationInput) durationInput.value = duration || '';
   if (activeInput) activeInput.checked = (isActive !== undefined && isActive !== null) ? Boolean(isActive) : true;
+
+  // Limpiar inputs de archivo y checkboxes de eliminar
+  if (fileInput) fileInput.value = '';
+  if (audioInput) audioInput.value = '';
+  if (clearFileCheck) clearFileCheck.checked = false;
+  if (clearAudioCheck) clearAudioCheck.checked = false;
+
+  // Estado del archivo Letra (PDF)
+  const fileCurrentContainer = document.getElementById('edit-file-current-container');
+  const fileEmptyContainer = document.getElementById('edit-file-empty-container');
+  const fileCurrentName = document.getElementById('edit-file-current-name');
+  const fileCurrentLink = document.getElementById('edit-file-current-link');
+
+  if (fileUrl && fileUrl.trim() !== '') {
+    const cleanFileName = (fileName || fileUrl).split('/').pop();
+    if (fileCurrentName) fileCurrentName.textContent = cleanFileName;
+    if (fileCurrentLink) fileCurrentLink.href = fileUrl;
+    if (fileCurrentContainer) fileCurrentContainer.style.display = 'block';
+    if (fileEmptyContainer) fileEmptyContainer.style.display = 'none';
+  } else {
+    if (fileCurrentContainer) fileCurrentContainer.style.display = 'none';
+    if (fileEmptyContainer) fileEmptyContainer.style.display = 'block';
+  }
+
+  // Estado de la pista de Audio (MP3)
+  const audioCurrentContainer = document.getElementById('edit-audio-current-container');
+  const audioEmptyContainer = document.getElementById('edit-audio-empty-container');
+  const audioCurrentName = document.getElementById('edit-audio-current-name');
+  const audioCurrentLink = document.getElementById('edit-audio-current-link');
+
+  if (audioUrl && audioUrl.trim() !== '') {
+    const cleanAudioName = (audioName || audioUrl).split('/').pop();
+    if (audioCurrentName) audioCurrentName.textContent = cleanAudioName;
+    if (audioCurrentLink) audioCurrentLink.href = audioUrl;
+    if (audioCurrentContainer) audioCurrentContainer.style.display = 'block';
+    if (audioEmptyContainer) audioEmptyContainer.style.display = 'none';
+  } else {
+    if (audioCurrentContainer) audioCurrentContainer.style.display = 'none';
+    if (audioEmptyContainer) audioEmptyContainer.style.display = 'block';
+  }
 
   // Reset all edit tag checkboxes, then check the assigned ones
   document.querySelectorAll('input[name="tags"].edit-tag-check').forEach((input) => {
@@ -628,6 +672,27 @@ function openEditSongModal(id, title, artist, duration, isActive, tagIds) {
 document.addEventListener('DOMContentLoaded', function () {
   MusicPlayer.init();
   CalendarApp.init();
+
+  // Auto-selección inteligente de etiquetas al adjuntar archivos
+  const bindTagAutoSelect = (fileInputSelector, tagKeyword) => {
+    document.querySelectorAll(fileInputSelector).forEach((input) => {
+      input.addEventListener('change', function () {
+        if (this.files && this.files.length > 0) {
+          const form = this.closest('form');
+          if (form) {
+            form.querySelectorAll('input[name="tags"]').forEach((tagInput) => {
+              const label = form.querySelector(`label[for="${tagInput.id}"]`);
+              if (label && label.textContent.toUpperCase().includes(tagKeyword)) {
+                tagInput.checked = true;
+              }
+            });
+          }
+        }
+      });
+    });
+  };
+  bindTagAutoSelect('input[name="audio"]', 'CON AUDIO');
+  bindTagAutoSelect('input[name="file"]', 'CON LETRA');
 
   // Control del botón de ordenamiento A-Z
   const sortBtn = document.getElementById('btn-toggle-az');

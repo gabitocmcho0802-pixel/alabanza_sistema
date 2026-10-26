@@ -34,6 +34,7 @@
         <div class="d-flex align-items-center gap-2 flex-wrap">
           <input type="hidden" name="orden" id="sort-order-input" value="{{ current_orden|default:'a-z' }}">
           <input type="hidden" name="filtro" id="filtro-recurso-input" value="{{ current_filtro|default:'todos' }}">
+          <input type="hidden" name="tag" id="filtro-tag-input" value="{{ current_tag }}">
           
           <!-- Filtro Rápido Audio / PDF -->
           <div class="btn-group" id="filter-buttons-group" role="group">
@@ -70,6 +71,23 @@
 
       </div>
 
+      <!-- Barra de Filtros de Etiquetas (Tags) -->
+      {% if tags %}
+      <div class="d-flex align-items-center gap-2 flex-wrap px-1 mt-2 pt-2 border-top border-light">
+        <span class="small text-muted fw-bold d-flex align-items-center gap-1">
+          <i class="bi bi-tags-fill text-primary"></i> Etiquetas:
+        </span>
+        <button type="button" class="btn btn-sm {% if not current_tag %}btn-primary{% else %}btn-outline-secondary bg-white text-secondary{% endif %} rounded-pill px-3 py-1 fw-semibold" style="font-size: 0.74rem;" onclick="setTagFilter('')">
+          Todas
+        </button>
+        {% for t in tags %}
+          <button type="button" class="btn btn-sm {% if current_tag == t.id|stringformat:'s' %}btn-primary{% else %}btn-outline-secondary bg-white text-secondary{% endif %} rounded-pill px-3 py-1 fw-semibold" style="font-size: 0.74rem;" onclick="setTagFilter('{{ t.id }}')">
+            {{ t.name }}
+          </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+
     </form>
 
     <!-- ========================================================= -->
@@ -104,7 +122,7 @@
                 <p class="song-author-name text-truncate" title="{{ song.artist }}">
                   <i class="bi bi-person-fill small me-1 opacity-75"></i>{{ song.artist|default:"Artista" }}
                 </p>
-                <div class="d-flex align-items-center gap-2 mt-1">
+                <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
                   {% if song.formatted_duration or song.duration %}
                     <span class="badge bg-light text-secondary border" style="font-size: 0.68rem;">
                       <i class="bi bi-clock me-1"></i>{{ song.formatted_duration|default:song.duration }}
@@ -116,10 +134,15 @@
                     </span>
                   {% endif %}
                   {% if song.file %}
-                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 0.68rem;">
+                    <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25" style="font-size: 0.68rem;">
                       <i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF Letra
                     </span>
                   {% endif %}
+                  {% for t in song.tags.all %}
+                    <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25" style="font-size: 0.68rem;">
+                      {{ t.name }}
+                    </span>
+                  {% endfor %}
                 </div>
               </div>
             </div>
@@ -168,7 +191,7 @@
                 <button 
                   class="btn btn-sm btn-link text-warning p-0 text-decoration-none" 
                   title="Editar canción"
-                  onclick="openEditSongModal('{{ song.id }}', '{{ song.title|escapejs }}', '{{ song.artist|escapejs }}', '{{ song.formatted_duration|default:'' }}', {{ song.is_active|yesno:'true,false' }}, [{% for t in song.tags.all %}{{ t.id }}{% if not forloop.last %},{% endif %}{% endfor %}])">
+                  onclick="openEditSongModal('{{ song.id }}', '{{ song.title|escapejs }}', '{{ song.artist|escapejs }}', '{{ song.formatted_duration|default:'' }}', {{ song.is_active|yesno:'true,false' }}, [{% for t in song.tags.all %}{{ t.id }}{% if not forloop.last %},{% endif %}{% endfor %}], '{{ song.file.name|default:''|escapejs }}', '{% if song.file %}{{ song.file.url|escapejs }}{% endif %}', '{{ song.audio.name|default:''|escapejs }}', '{% if song.audio %}{{ song.audio.url|escapejs }}{% endif %}')">
                   <i class="bi bi-pencil-square"></i>
                 </button>
 
@@ -241,18 +264,80 @@
               <input type="text" name="artist" id="edit-song-artist" class="form-control form-control-clean" required>
             </div>
 
+            <!-- Campo Letra (PDF / Documento) -->
             <div class="col-12 col-md-6">
               <label class="form-label text-muted small fw-bold">
                 <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> Letra (PDF)
               </label>
-              <input type="file" name="file" accept=".pdf,.doc,.docx" class="form-control form-control-clean">
+
+              <!-- Panel visual del archivo actual -->
+              <div id="edit-file-current-container" class="mb-2 p-2 rounded bg-light border" style="display: none;">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center text-truncate me-2">
+                    <i class="bi bi-file-earmark-check-fill text-danger me-2 fs-5 flex-shrink-0"></i>
+                    <div class="text-truncate">
+                      <span class="small fw-semibold text-dark d-block text-truncate" id="edit-file-current-name"></span>
+                      <a href="#" id="edit-file-current-link" target="_blank" class="text-primary small text-decoration-none d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-box-arrow-up-right"></i> Ver archivo actual
+                      </a>
+                    </div>
+                  </div>
+                  <div class="form-check form-check-inline m-0 flex-shrink-0">
+                    <input class="form-check-input" type="checkbox" name="clear_file" value="1" id="clearFileCheck">
+                    <label class="form-check-label text-danger small fw-semibold" for="clearFileCheck" style="font-size: 0.75rem;">
+                      Eliminar
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mensaje si no tiene archivo -->
+              <div id="edit-file-empty-container" class="mb-2 text-muted small py-1" style="display: none; font-size: 0.78rem;">
+                <i class="bi bi-info-circle me-1"></i> Sin archivo de letra adjunto actualmente.
+              </div>
+
+              <input type="file" name="file" id="edit-song-file" accept=".pdf,.doc,.docx,.txt" class="form-control form-control-clean">
+              <div class="form-text text-muted" style="font-size: 0.72rem;">
+                Sube un nuevo archivo para reemplazar el actual o adjuntarlo por primera vez.
+              </div>
             </div>
 
+            <!-- Campo Audio (MP3 / Grabación) -->
             <div class="col-12 col-md-6">
               <label class="form-label text-muted small fw-bold">
                 <i class="bi bi-soundwave text-success me-1"></i> Audio (MP3)
               </label>
-              <input type="file" name="audio" accept="audio/*" class="form-control form-control-clean">
+
+              <!-- Panel visual del audio actual -->
+              <div id="edit-audio-current-container" class="mb-2 p-2 rounded bg-light border" style="display: none;">
+                <div class="d-flex align-items-center justify-content-between">
+                  <div class="d-flex align-items-center text-truncate me-2">
+                    <i class="bi bi-file-earmark-music-fill text-success me-2 fs-5 flex-shrink-0"></i>
+                    <div class="text-truncate">
+                      <span class="small fw-semibold text-dark d-block text-truncate" id="edit-audio-current-name"></span>
+                      <a href="#" id="edit-audio-current-link" target="_blank" class="text-success small text-decoration-none d-inline-flex align-items-center gap-1" style="font-size: 0.75rem;">
+                        <i class="bi bi-play-circle-fill"></i> Escuchar / Descargar
+                      </a>
+                    </div>
+                  </div>
+                  <div class="form-check form-check-inline m-0 flex-shrink-0">
+                    <input class="form-check-input" type="checkbox" name="clear_audio" value="1" id="clearAudioCheck">
+                    <label class="form-check-label text-danger small fw-semibold" for="clearAudioCheck" style="font-size: 0.75rem;">
+                      Eliminar
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Mensaje si no tiene audio -->
+              <div id="edit-audio-empty-container" class="mb-2 text-muted small py-1" style="display: none; font-size: 0.78rem;">
+                <i class="bi bi-info-circle me-1"></i> Sin pista de audio adjunta actualmente.
+              </div>
+
+              <input type="file" name="audio" id="edit-song-audio" accept="audio/*,.mp3,.wav,.ogg,.m4a,.aac" class="form-control form-control-clean">
+              <div class="form-text text-muted" style="font-size: 0.72rem;">
+                Sube un nuevo audio para reemplazar el actual o adjuntarlo por primera vez.
+              </div>
             </div>
 
             <div class="col-12 col-md-6">
@@ -309,6 +394,15 @@
     const form = document.getElementById('searchSortForm');
     if (filterInput && form) {
       filterInput.value = val;
+      form.submit();
+    }
+  }
+
+  function setTagFilter(val) {
+    const tagInput = document.getElementById('filtro-tag-input');
+    const form = document.getElementById('searchSortForm');
+    if (tagInput && form) {
+      tagInput.value = val;
       form.submit();
     }
   }

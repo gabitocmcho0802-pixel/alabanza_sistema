@@ -214,7 +214,32 @@ class SongUpdateView(LoginRequiredMixin, PermisoRolMixin, UpdateView):
     nivel_requerido = 3  # Exclusivo Nivel 3
 
     def form_valid(self, form):
-        song = form.save()
+        # Obtenemos la instancia anterior antes de guardar para comparar archivos
+        old_song = self.get_object()
+        old_file = old_song.file
+        old_audio = old_song.audio
+
+        song = form.save(commit=False)
+
+        # 1. Gestión de Letra (PDF / Documento)
+        if self.request.POST.get('clear_file') == '1':
+            if old_file:
+                old_file.delete(save=False)
+            song.file = None
+        elif 'file' in self.request.FILES and old_file and old_file != song.file:
+            old_file.delete(save=False)
+
+        # 2. Gestión de Audio (MP3 / Grabación)
+        if self.request.POST.get('clear_audio') == '1':
+            if old_audio:
+                old_audio.delete(save=False)
+            song.audio = None
+        elif 'audio' in self.request.FILES and old_audio and old_audio != song.audio:
+            old_audio.delete(save=False)
+
+        song.save()
+        form.save_m2m()
+
         messages.success(self.request, f"¡Actualizada! La canción '{song.title}' fue modificada correctamente.")
         next_url = self.request.POST.get('next') or self.request.META.get('HTTP_REFERER') or self.success_url
         return redirect(next_url)
@@ -239,6 +264,11 @@ class SongDeleteView(LoginRequiredMixin, PermisoRolMixin, DeleteView):
     def delete(self, request, *args, **kwargs):
         cancion = self.get_object()
         titulo = cancion.title
+        # Limpieza de archivos físicos en disco antes de borrar el registro
+        if cancion.file:
+            cancion.file.delete(save=False)
+        if cancion.audio:
+            cancion.audio.delete(save=False)
         cancion.delete()
         messages.warning(request, f"La canción '{titulo}' ha sido eliminada del repertorio.")
         return redirect(self.success_url)
