@@ -16,6 +16,9 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 
+  <!-- Driver.js CSS (Tour Interactivo) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.css"/>
+
   <!-- Estilos Personalizados del Sistema -->
   <link rel="stylesheet" href="{% static 'style.css' %}">
   {% block extra_css %}{% endblock %}
@@ -29,7 +32,7 @@
     <div class="container-fluid px-lg-4 d-flex align-items-center justify-content-between">
       
       <!-- Logo MusicApp con Chip Musical -->
-      <a class="musicapp-brand" href="{% url 'home' %}">
+      <a class="musicapp-brand" id="nav-brand" href="{% url 'home' %}">
         <div class="brand-icon-chip">
           <i class="bi bi-music-note-beamed"></i>
         </div>
@@ -40,40 +43,45 @@
       <nav class="d-flex align-items-center gap-3">
         <ul class="musicapp-nav">
           <li>
-            <a class="musicapp-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" href="{% url 'home' %}">
+            <a class="musicapp-link {% if request.resolver_match.url_name == 'home' %}active{% endif %}" id="nav-inicio" href="{% url 'home' %}">
               <i class="bi bi-calendar-event"></i>
               <span>Inicio</span>
             </a>
           </li>
           <li>
-            <a class="musicapp-link {% if request.resolver_match.url_name == 'playlist' %}active{% endif %}" href="{% url 'playlist' %}">
+            <a class="musicapp-link {% if request.resolver_match.url_name == 'playlist' %}active{% endif %}" id="nav-canciones" href="{% url 'playlist' %}">
               <i class="bi bi-music-note-list"></i>
               <span>Canciones</span>
             </a>
           </li>
           <li>
             {% if user.is_authenticated and user.puede_editar_canciones %}
-              <button class="musicapp-link" data-bs-toggle="modal" data-bs-target="#addSongModal">
+              <button class="musicapp-link" id="nav-subir" data-bs-toggle="modal" data-bs-target="#addSongModal">
                 <i class="bi bi-cloud-arrow-up-fill"></i>
                 <span>Subir</span>
               </button>
             {% elif user.is_authenticated %}
-              <button class="musicapp-link" type="button" data-bs-toggle="modal" data-bs-target="#readOnlyPermissionModal" title="Subir (Permisos)">
+              <button class="musicapp-link" id="nav-subir" type="button" data-bs-toggle="modal" data-bs-target="#readOnlyPermissionModal" title="Subir (Permisos)">
                 <i class="bi bi-cloud-arrow-up"></i>
                 <span>Subir</span>
               </button>
             {% else %}
-              <a class="musicapp-link" href="{% url 'login' %}">
+              <a class="musicapp-link" id="nav-subir" href="{% url 'login' %}">
                 <i class="bi bi-cloud-arrow-up"></i>
                 <span>Subir</span>
               </a>
             {% endif %}
           </li>
+          <li>
+            <button class="musicapp-link" type="button" id="btn-reabrir-tour" title="Ayuda / Tour interactivo">
+              <span class="fs-4 fw-bold">?</span>
+            </button>
+          </li>
         </ul>
 
         <!-- Menú de Usuario con Dropdown Bootstrap 5 -->
         {% if user.is_authenticated %}
-          <div class="dropdown ms-1">
+          <div class="dropdown ms-1" id="nav-user-menu">
             <div class="user-menu-pill dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="Usuario conectado: {{ user.username }}">
               <div class="user-avatar-badge">
                 {{ user.username|slice:":1"|upper }}
@@ -365,20 +373,24 @@
         <div class="modal-footer modal-footer-clean">
           <button type="button" class="btn-secondary-clean" data-bs-dismiss="modal">Cerrar</button>
         </div>
-  <!-- MODAL: ADVERTENCIA DE PERMISO SÓLO LECTURA (DISEÑO BOOTSTRAP) -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADVERTENCIA - NO TIENES PERMISO PARA SUBIR CANCIONES -->
   <div class="modal fade" id="readOnlyPermissionModal" tabindex="-1" aria-labelledby="readOnlyModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content modal-content-clean border-0 shadow-lg">
+      <div class="modal-content modal-content-clean border-0 shadow-lg" style="border-radius: 20px;">
         <div class="modal-body text-center p-4">
-          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow-sm" style="width: 72px; height: 72px; background: rgba(245, 158, 11, 0.12);">
-            <i class="bi bi-shield-lock-fill" style="font-size: 2.3rem; color: #f59e0b;"></i>
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow-sm" style="width: 72px; height: 72px; background: rgba(239, 68, 68, 0.12);">
+            <i class="bi bi-shield-x" style="font-size: 2.3rem; color: #ef4444;"></i>
           </div>
-          <h4 class="fw-bold text-dark mb-2" id="readOnlyModalLabel">Acceso de Sólo Lectura</h4>
+          <h4 class="fw-bold text-dark mb-2" id="readOnlyModalLabel">No tienes permiso para subir canciones</h4>
           <p class="text-muted small mb-3">
-            Tu rol actual en el sistema (<strong class="text-dark">{{ user.rol.nombre|default:"Músico Lector" }}</strong>) está configurado con permisos de lectura. Puedes escuchar pistas y consultar letras, pero <strong>no tienes permiso para subir canciones nuevas ni modificar el repertorio</strong>.
+            Tu cuenta actual (<strong class="text-dark">{{ user.username }}</strong>) está configurada con rol <strong class="text-dark">{{ user.rol.nombre|default:"Músico Lector" }}</strong> (sólo lectura). Tienes acceso para escuchar temas y ver partituras, pero <strong>no tienes permiso para subir ni modificar el catálogo</strong>.
           </p>
-          <div class="alert alert-light border small text-muted text-start py-2 px-3 mb-4 d-flex align-items-center gap-2">
-            <i class="bi bi-info-circle-fill text-primary fs-5"></i>
+          <div class="alert alert-light border small text-muted text-start py-2 px-3 mb-4 d-flex align-items-center gap-2" style="border-radius: 12px;">
+            <i class="bi bi-info-circle-fill text-danger fs-5"></i>
             <div>
               Para subir canciones, letras PDF o pistas de audio, solicita a un <strong>Administrador</strong> que te otorgue permisos de nivel 3 (Crear y modificar).
             </div>
@@ -387,11 +399,40 @@
             <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
               Entendido
             </button>
-            {% if user.is_authenticated %}
             <button type="button" class="btn btn-outline-primary rounded-pill px-4" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#userProfileModal">
               <i class="bi bi-person-badge me-1"></i>Ver mis Permisos
             </button>
-            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADVERTENCIA - NO TIENES PERMISO PARA PROGRAMAR EN CALENDARIO -->
+  <div class="modal fade" id="readOnlyScheduleModal" tabindex="-1" aria-labelledby="readOnlyScheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content modal-content-clean border-0 shadow-lg" style="border-radius: 20px;">
+        <div class="modal-body text-center p-4">
+          <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3 shadow-sm" style="width: 72px; height: 72px; background: rgba(245, 158, 11, 0.14);">
+            <i class="bi bi-calendar-x-fill" style="font-size: 2.3rem; color: #f59e0b;"></i>
+          </div>
+          <h4 class="fw-bold text-dark mb-2" id="readOnlyScheduleModalLabel">No tienes permiso para programar</h4>
+          <p class="text-muted small mb-3">
+            Tu cuenta (<strong class="text-dark">{{ user.username }}</strong>) con rol <strong class="text-dark">{{ user.rol.nombre|default:"Músico Lector" }}</strong> sólo tiene permisos de lectura. <strong>No tienes permiso para programar canciones ni fechas de ensayo en el calendario</strong>.
+          </p>
+          <div class="alert alert-light border small text-muted text-start py-2 px-3 mb-4 d-flex align-items-center gap-2" style="border-radius: 12px;">
+            <i class="bi bi-exclamation-triangle-fill text-warning fs-5"></i>
+            <div>
+              Solo los usuarios con rol de <strong>Administrador</strong> o permisos de nivel 3 pueden asignar canciones y programar eventos en el calendario.
+            </div>
+          </div>
+          <div class="d-flex justify-content-center gap-2">
+            <button type="button" class="btn btn-secondary rounded-pill px-4" data-bs-dismiss="modal">
+              Entendido
+            </button>
+            <button type="button" class="btn btn-outline-primary rounded-pill px-4" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#userProfileModal">
+              <i class="bi bi-person-badge me-1"></i>Ver mis Permisos
+            </button>
           </div>
         </div>
       </div>
@@ -402,8 +443,18 @@
   <!-- Bootstrap 5 JS Bundle con Popper -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
+  <!-- Datos de Sesión y Permisos para Scripts (Tour, etc.) -->
+  <script id="user-auth-data" type="application/json">{% if user.is_authenticated %}true{% else %}false{% endif %}</script>
+  <script id="user-admin-data" type="application/json">{% if user.is_authenticated and user.puede_administrar %}true{% else %}false{% endif %}</script>
+  <script id="userAuthData" type="application/json">{% if user.is_authenticated %}true{% else %}false{% endif %}</script>
+  <script id="isAdmin" type="application/json">{% if user.is_authenticated and user.puede_administrar %}true{% else %}false{% endif %}</script>
+
+  <!-- Driver.js (Tour Interactivo) -->
+  <script src="https://cdn.jsdelivr.net/npm/driver.js@1.3.1/dist/driver.js.iife.js"></script>
+
   <!-- Scripts Personalizados -->
   <script src="{% static 'scripts.js' %}"></script>
+  <script src="{% static 'tour.js' %}"></script>
   {% block extra_js %}{% endblock %}
 
 </body>

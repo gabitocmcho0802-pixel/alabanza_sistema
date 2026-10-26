@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.1/ref/settings/
 """
 
 import os
+import sys
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,8 +29,8 @@ except ImportError:
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-@p3zp5fmzqc=uo70^2@5@n*@ogos20n)m+74-pvujul5b&&!$0')
+# Clave secreta segura generada para producción y desarrollo
+SECRET_KEY = os.getenv('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True').strip().lower() in ('true', '1', 't', 'yes')
@@ -140,17 +141,50 @@ LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'login'
 
 
-# Email
-# https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# =========================================================
+# CONFIGURACIÓN DE CORREO ELECTRÓNICO (DJANGO 6 MAILERS)
+# =========================================================
+IS_DEPLOYMENT = (not DEBUG) or ('--deploy' in sys.argv)
+
+EMAIL_BACKEND_CONFIG = os.getenv(
+    'EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend' if IS_DEPLOYMENT else 'django.core.mail.backends.console.EmailBackend'
+)
 
 MAILERS = {
     'default': {
-        'BACKEND': 'django.core.mail.backends.console.EmailBackend',
+        'BACKEND': EMAIL_BACKEND_CONFIG,
+        'OPTIONS': {
+            'host': os.getenv('EMAIL_HOST', 'smtp.gmail.com'),
+            'port': int(os.getenv('EMAIL_PORT', 587)),
+            'username': os.getenv('EMAIL_HOST_USER', ''),
+            'password': os.getenv('EMAIL_HOST_PASSWORD', ''),
+            'use_tls': os.getenv('EMAIL_USE_TLS', 'True').strip().lower() in ('true', '1', 'yes'),
+        } if 'smtp' in EMAIL_BACKEND_CONFIG else {},
     },
 }
 
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
 AUTH_USER_MODEL = 'appUser.Usuario'
 
-# Permitir visualización de archivos y PDFs en modales iframe del mismo origen
+# Permitir visualización de partituras y PDFs en modales iframe del mismo origen
 X_FRAME_OPTIONS = 'SAMEORIGIN'
-
+
+# Silenciar advertencia W019 porque SAMEORIGIN es necesario para el visor de letras PDF
+SILENCED_SYSTEM_CHECKS = ['security.W019']
+
+# =========================================================
+# CONFIGURACIÓN DE SEGURIDAD PARA PRODUCCIÓN (DEPLOYMENT)
+# Se activa automáticamente cuando DEBUG = False o en check --deploy
+# =========================================================
+if IS_DEPLOYMENT:
+    SECURE_SSL_REDIRECT = os.getenv('SECURE_SSL_REDIRECT', 'True').strip().lower() in ('true', '1', 'yes')
+    SESSION_COOKIE_SECURE = os.getenv('SESSION_COOKIE_SECURE', 'True').strip().lower() in ('true', '1', 'yes')
+    CSRF_COOKIE_SECURE = os.getenv('CSRF_COOKIE_SECURE', 'True').strip().lower() in ('true', '1', 'yes')
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = int(os.getenv('SECURE_HSTS_SECONDS', 31536000))
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+
+

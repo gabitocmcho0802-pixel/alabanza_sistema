@@ -36,7 +36,7 @@
           <input type="hidden" name="filtro" id="filtro-recurso-input" value="{{ current_filtro|default:'todos' }}">
           
           <!-- Filtro Rápido Audio / PDF -->
-          <div class="btn-group" role="group">
+          <div class="btn-group" id="filter-buttons-group" role="group">
             <button type="button" class="btn btn-sm {% if current_filtro == 'todos' or not current_filtro %}btn-primary{% else %}btn-outline-secondary bg-white{% endif %} rounded-start-pill px-3 fw-semibold" onclick="setResourceFilter('todos')">
               Todos
             </button>

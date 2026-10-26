@@ -134,14 +134,14 @@
             <!-- Botón de Acción para Programar Canción (Nivel 3) -->
             {% if user.puede_editar_canciones %}
             <div class="pt-3 mt-auto border-top border-light text-center">
-              <button class="btn btn-outline-primary w-100 rounded-pill py-2 fw-bold small d-flex align-items-center justify-content-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduleSongModal">
+              <button id="btn-schedule-event" class="btn btn-outline-primary w-100 rounded-pill py-2 fw-bold small d-flex align-items-center justify-content-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduleSongModal">
                 <i class="bi bi-plus-circle-fill"></i>
                 <span>Programar Tema en Calendario</span>
               </button>
             </div>
             {% elif user.is_authenticated %}
             <div class="pt-3 mt-auto border-top border-light text-center">
-              <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold small d-flex align-items-center justify-content-center gap-2 bg-light text-muted" data-bs-toggle="modal" data-bs-target="#readOnlyPermissionModal">
+              <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold small d-flex align-items-center justify-content-center gap-2 bg-light text-muted" data-bs-toggle="modal" data-bs-target="#readOnlyScheduleModal">
                 <i class="bi bi-shield-lock-fill text-warning"></i>
                 <span>Programar Tema (Sólo Lectura)</span>
               </button>
