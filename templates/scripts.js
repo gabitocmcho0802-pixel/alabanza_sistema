@@ -722,4 +722,25 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     }
   });
+
+  // Transición suave entre el offcanvas móvil y los modales (evita conflictos de backdrops)
+  document.querySelectorAll('#mobileNavOffcanvas [data-bs-toggle="modal"]').forEach((btn) => {
+    btn.addEventListener('click', function (e) {
+      const targetModalSelector = this.getAttribute('data-bs-target');
+      const offcanvasEl = document.getElementById('mobileNavOffcanvas');
+      if (offcanvasEl && targetModalSelector) {
+        const bsOffcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl);
+        if (bsOffcanvas) {
+          bsOffcanvas.hide();
+        }
+        setTimeout(() => {
+          const targetModalEl = document.querySelector(targetModalSelector);
+          if (targetModalEl) {
+            const bsModal = bootstrap.Modal.getOrCreateInstance(targetModalEl);
+            bsModal.show();
+          }
+        }, 320);
+      }
+    });
+  });
 });
