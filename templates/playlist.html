@@ -1,0 +1,317 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Canciones - Repertorio | MusicApp{% endblock %}
+
+{% block content %}
+<div class="playlist-layout-wrapper">
+
+    <!-- ========================================================= -->
+    <!-- BARRA SUPERIOR: BUSCADOR 'Buscar por ...' Y BOTÓN 'Az a Z' -->
+    <!-- ========================================================= -->
+    <form method="GET" action="{% url 'playlist' %}" id="searchSortForm">
+      
+      <div class="songs-top-toolbar">
+        
+        <!-- Campo Buscador con Icono Integrado -->
+        <div class="search-input-wrapper">
+          <i class="bi bi-search search-icon-inside"></i>
+          <input 
+            type="text" 
+            name="q" 
+            id="search-input-canciones"
+            class="input-search-styled" 
+            placeholder="Buscar por título o artista..." 
+            value="{{ current_q }}">
+          {% if current_q %}
+          <a href="{% url 'playlist' %}" class="position-absolute end-0 top-50 translate-middle-y me-3 text-muted text-decoration-none" title="Limpiar búsqueda">
+            <i class="bi bi-x-circle-fill"></i>
+          </a>
+          {% endif %}
+        </div>
+
+        <!-- Botón de Ordenamiento 'Az a Z' y Filtros Rápidos -->
+        <div class="d-flex align-items-center gap-2 flex-wrap">
+          <input type="hidden" name="orden" id="sort-order-input" value="{{ current_orden|default:'a-z' }}">
+          <input type="hidden" name="filtro" id="filtro-recurso-input" value="{{ current_filtro|default:'todos' }}">
+          
+          <!-- Filtro Rápido Audio / PDF -->
+          <div class="btn-group" role="group">
+            <button type="button" class="btn btn-sm {% if current_filtro == 'todos' or not current_filtro %}btn-primary{% else %}btn-outline-secondary bg-white{% endif %} rounded-start-pill px-3 fw-semibold" onclick="setResourceFilter('todos')">
+              Todos
+            </button>
+            <button type="button" class="btn btn-sm {% if current_filtro == 'audio' %}btn-primary{% else %}btn-outline-secondary bg-white{% endif %} px-3 fw-semibold" onclick="setResourceFilter('audio')">
+              <i class="bi bi-volume-up-fill me-1"></i>Con Audio
+            </button>
+            <button type="button" class="btn btn-sm {% if current_filtro == 'pdf' %}btn-primary{% else %}btn-outline-secondary bg-white{% endif %} rounded-end-pill px-3 fw-semibold" onclick="setResourceFilter('pdf')">
+              <i class="bi bi-file-earmark-pdf-fill me-1"></i>Con PDF
+            </button>
+          </div>
+
+          <!-- Botón de Ordenamiento Az a Z -->
+          <button type="button" class="btn-sort-clean" id="btn-toggle-az" title="Cambiar orden alfabético">
+            <span id="btn-az-label">{% if current_orden == 'z-a' %}Za a A{% else %}Az a Z{% endif %}</span>
+            <i class="bi bi-arrow-down-up small text-primary"></i>
+          </button>
+
+          <!-- Botón Subir para Administrador / Nivel 3 -->
+          {% if user.puede_editar_canciones %}
+          <button type="button" class="btn btn-primary btn-sm rounded-pill px-3 py-2 fw-bold d-flex align-items-center gap-1 shadow-sm" data-bs-toggle="modal" data-bs-target="#addSongModal">
+            <i class="bi bi-plus-lg"></i>
+            <span>Nueva Canción</span>
+          </button>
+          {% elif user.is_authenticated %}
+          <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-2 fw-semibold d-flex align-items-center gap-1 bg-white opacity-75 shadow-sm" data-bs-toggle="modal" data-bs-target="#readOnlyPermissionModal" title="Permiso de sólo lectura">
+            <i class="bi bi-lock-fill text-warning"></i>
+            <span>Nueva Canción</span>
+          </button>
+          {% endif %}
+        </div>
+
+      </div>
+
+    </form>
+
+    <!-- ========================================================= -->
+    <!-- CONTENEDOR GRIS CLARO DE CANCIONES (MODELO EXACTO ELEVADO) -->
+    <!-- ========================================================= -->
+    <div class="songs-catalog-container">
+      
+      <!-- Contador de Resultados -->
+      <div class="d-flex align-items-center justify-content-between px-2 mb-3">
+        <span class="text-muted small fw-bold text-uppercase" style="letter-spacing: 0.05em;">
+          Repertorio Oficial &bull; {{ songs|length }} canciones
+        </span>
+        <span class="badge bg-white text-muted border shadow-sm">
+          <i class="bi bi-music-note-beamed text-primary me-1"></i> MusicApp Library
+        </span>
+      </div>
+
+      <div id="songs-list-container">
+        {% for song in songs %}
+          <!-- Tarjeta Blanca de Canción -->
+          <div class="song-card-elevated" id="song-card-{{ song.id }}">
+            
+            <!-- Columna Izquierda: Icono Disco, Nombre y Artista -->
+            <div class="song-lead-col">
+              <div class="song-disc-thumb">
+                <i class="bi bi-music-note-beamed"></i>
+              </div>
+              <div class="text-truncate">
+                <h5 class="song-main-title text-truncate" title="{{ song.title }}">
+                  {{ song.title }}
+                </h5>
+                <p class="song-author-name text-truncate" title="{{ song.artist }}">
+                  <i class="bi bi-person-fill small me-1 opacity-75"></i>{{ song.artist|default:"Artista" }}
+                </p>
+                <div class="d-flex align-items-center gap-2 mt-1">
+                  {% if song.formatted_duration or song.duration %}
+                    <span class="badge bg-light text-secondary border" style="font-size: 0.68rem;">
+                      <i class="bi bi-clock me-1"></i>{{ song.formatted_duration|default:song.duration }}
+                    </span>
+                  {% endif %}
+                  {% if song.audio %}
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25" style="font-size: 0.68rem;">
+                      <i class="bi bi-volume-up-fill me-1"></i>Audio MP3
+                    </span>
+                  {% endif %}
+                  {% if song.file %}
+                    <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25" style="font-size: 0.68rem;">
+                      <i class="bi bi-file-earmark-pdf-fill me-1"></i>PDF Letra
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+
+            <!-- Columna Derecha: Botones Audios y Ver Letra -->
+            <div class="song-actions-stack">
+              
+              <!-- Botón Audios -->
+              <button 
+                type="button" 
+                class="btn-action-audio btn-play-trigger"
+                data-song-id="{{ song.id }}"
+                data-song-title="{{ song.title|escapejs }}"
+                data-song-artist="{{ song.artist|escapejs }}"
+                data-audio-url="{% if song.audio %}{{ song.audio.url }}{% endif %}"
+                data-duration="{% if song.formatted_duration %}{{ song.formatted_duration }}{% elif song.duration %}{{ song.duration }}{% else %}03:45{% endif %}"
+                title="Reproducir pista de audio">
+                <i class="bi bi-play-circle-fill fs-6"></i>
+                <span>Audios</span>
+              </button>
+
+              <!-- Botón Ver Letra -->
+              {% if song.file %}
+                <button 
+                  type="button" 
+                  class="btn-action-letra"
+                  onclick="openPdfModal('{{ song.title|escapejs }}', '{{ song.artist|escapejs }}', '{{ song.file.url }}')"
+                  title="Ver Letra / Partitura en PDF">
+                  <i class="bi bi-file-earmark-text-fill text-danger"></i>
+                  <span>Ver letra</span>
+                </button>
+              {% else %}
+                <button 
+                  type="button" 
+                  class="btn-action-letra opacity-50"
+                  onclick="openPdfModal('{{ song.title|escapejs }}', '{{ song.artist|escapejs }}', '')"
+                  title="Sin PDF adjunto">
+                  <i class="bi bi-file-earmark text-muted"></i>
+                  <span>Ver letra</span>
+                </button>
+              {% endif %}
+
+              <!-- Herramientas Administrativas (Nivel 3) -->
+              {% if user.puede_editar_canciones %}
+              <div class="d-flex align-items-center gap-1 mt-1">
+                <button 
+                  class="btn btn-sm btn-link text-warning p-0 text-decoration-none" 
+                  title="Editar canción"
+                  onclick="openEditSongModal('{{ song.id }}', '{{ song.title|escapejs }}', '{{ song.artist|escapejs }}', '{{ song.formatted_duration|default:'' }}', {{ song.is_active|yesno:'true,false' }}, [{% for t in song.tags.all %}{{ t.id }}{% if not forloop.last %},{% endif %}{% endfor %}])">
+                  <i class="bi bi-pencil-square"></i>
+                </button>
+
+                <form method="POST" action="{% url 'song_delete' song.id %}" onsubmit="return confirm('¿Seguro que deseas eliminar la canción \'{{ song.title|escapejs }}\'?');" class="d-inline m-0 p-0 ms-2">
+                  {% csrf_token %}
+                  <button type="submit" class="btn btn-sm btn-link text-danger p-0 border-0 text-decoration-none" title="Eliminar del repertorio">
+                    <i class="bi bi-trash3-fill"></i>
+                  </button>
+                </form>
+              </div>
+              {% endif %}
+
+            </div>
+
+          </div>
+        {% empty %}
+          <!-- Estado Vacío -->
+          <div class="bg-white rounded-4 p-5 text-center shadow-sm border">
+            <i class="bi bi-music-note-beamed text-muted display-4 d-block mb-3 opacity-50"></i>
+            <h5 class="fw-bold text-dark mb-1">No se encontraron temas en el repertorio</h5>
+            <p class="text-muted small mb-3">
+              {% if current_q %}No hay resultados que coincidan con la búsqueda "{{ current_q }}".{% else %}El catálogo aún no tiene canciones registradas.{% endif %}
+            </p>
+            <div class="d-flex justify-content-center gap-2">
+              {% if current_q or current_filtro != 'todos' %}
+                <a href="{% url 'playlist' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                  <i class="bi bi-arrow-counterclockwise me-1"></i>Restablecer Filtros
+                </a>
+              {% endif %}
+              {% if user.puede_editar_canciones %}
+                <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addSongModal">
+                  <i class="bi bi-plus-lg me-1"></i>Subir Primera Canción
+                </button>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+    </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: EDITAR CANCIÓN (NIVEL 3) -->
+<!-- ========================================================= -->
+{% if user.puede_editar_canciones %}
+<div class="modal fade" id="editSongModal" tabindex="-1" aria-labelledby="editSongModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content modal-content-clean">
+      <form method="POST" id="editSongForm" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="modal-header modal-header-clean">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="editSongModalLabel">
+            <i class="bi bi-pencil-square text-primary"></i>
+            <span>Editar Canción del Repertorio</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-12 col-md-7">
+              <label class="form-label text-muted small fw-bold">Título de la Canción *</label>
+              <input type="text" name="title" id="edit-song-title" class="form-control form-control-clean" required>
+            </div>
+
+            <div class="col-12 col-md-5">
+              <label class="form-label text-muted small fw-bold">Artista / Autor *</label>
+              <input type="text" name="artist" id="edit-song-artist" class="form-control form-control-clean" required>
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label text-muted small fw-bold">
+                <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> Actualizar Partitura / Letra (PDF)
+              </label>
+              <input type="file" name="file" accept=".pdf,.doc,.docx" class="form-control form-control-clean">
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label text-muted small fw-bold">
+                <i class="bi bi-soundwave text-success me-1"></i> Actualizar Audio de Referencia
+              </label>
+              <input type="file" name="audio" accept="audio/*" class="form-control form-control-clean">
+            </div>
+
+            <div class="col-12 col-md-6">
+              <label class="form-label text-muted small fw-bold">Duración</label>
+              <input type="text" name="duration" id="edit-song-duration" class="form-control form-control-clean" placeholder="Ej. 03:45">
+            </div>
+
+            {% if all_tags %}
+            <div class="col-12">
+              <label class="form-label text-muted small fw-bold d-block mb-1">
+                <i class="bi bi-tags-fill text-primary me-1"></i> Categorías / Etiquetas
+              </label>
+              <div class="d-flex flex-wrap gap-2">
+                {% for t in all_tags %}
+                  <div class="form-check p-0 m-0">
+                    <input type="checkbox" class="btn-check edit-tag-check" name="tags" id="edit-tag-{{ t.id }}" value="{{ t.id }}" autocomplete="off">
+                    <label class="btn btn-outline-secondary btn-sm rounded-pill px-3 py-1" for="edit-tag-{{ t.id }}" style="font-size: 0.76rem;">
+                      {{ t.name }}
+                    </label>
+                  </div>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            
+            <div class="col-12">
+              <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" name="is_active" id="editIsActiveCheck" checked>
+                <label class="form-check-label text-dark small fw-medium" for="editIsActiveCheck">Canción activa en el repertorio</label>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="modal-footer modal-footer-clean">
+          <button type="button" class="btn-secondary-clean" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-blue">
+            <i class="bi bi-check-lg"></i>
+            <span>Guardar Cambios</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script>
+  function setResourceFilter(val) {
+    const filterInput = document.getElementById('filtro-recurso-input');
+    const form = document.getElementById('searchSortForm');
+    if (filterInput && form) {
+      filterInput.value = val;
+      form.submit();
+    }
+  }
+</script>
+
+{% endblock %}

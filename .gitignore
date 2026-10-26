@@ -1,0 +1,72 @@
+# ==========================================
+# Entorno Virtual
+# ==========================================
+venv/
+.venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ==========================================
+# Variables de Entorno y Secretos
+# ==========================================
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# ==========================================
+# Base de Datos
+# ==========================================
+*.sqlite3
+*.sqlite3-journal
+*.sqlite3.bak
+db.sqlite3
+db.sqlite3.bak
+
+# ==========================================
+# Archivos Multimedia / Subidas de Usuarios
+# ==========================================
+media/*
+!media/.gitkeep
+media/songs/*
+!media/songs/.gitkeep
+
+# ==========================================
+# Bytecode y Caché de Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyd
+*.pyo
+
+# ==========================================
+# Logs y Archivos Temporales
+# ==========================================
+*.log
+*.pot
+*.bak
+*.tmp
+*.temp
+
+# ==========================================
+# Editores y Entornos de Desarrollo (IDE)
+# ==========================================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+
+# ==========================================
+# Archivos del Sistema Operativo
+# ==========================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+[Dd]esktop.ini

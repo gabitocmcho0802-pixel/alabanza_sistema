@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Inicio - Calendario | MusicApp{% endblock %}
+
+{% block content %}
+<div class="calendar-layout-wrapper">
+
+  <!-- ========================================================= -->
+  <!-- ENCABEZADO DE SECCIÓN CON MÉTRICAS RÁPIDAS -->
+  <!-- ========================================================= -->
+  <div class="calendar-section-header">
+      <div>
+        <h2 class="calendar-section-title">
+          <i class="bi bi-calendar-week-fill text-primary"></i>
+          <span>Calendario</span>
+        </h2>
+        <p class="text-muted small mb-0">Programación de ensayos generales, servicios y canciones asignadas.</p>
+      </div>
+
+      <!-- Badges de Métricas de la Banda -->
+      <div class="d-flex align-items-center gap-2 flex-wrap">
+        <span class="badge bg-white text-dark border shadow-sm py-2 px-3 rounded-pill fw-semibold">
+          <i class="bi bi-disc text-primary me-1"></i> {{ total_canciones }} Temas en Repertorio
+        </span>
+        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 py-2 px-3 rounded-pill fw-bold">
+          <i class="bi bi-calendar-check me-1"></i> {{ eventos_semana_count }} Ensayos esta Semana
+        </span>
+      </div>
+    </div>
+
+    <!-- ========================================================= -->
+    <!-- CONTENEDOR PRINCIPAL: CALENDARIO SLATE OSCURO & SIDEBAR -->
+    <!-- ========================================================= -->
+    <div class="calendar-main-card">
+      <div class="row g-4 align-items-stretch">
+
+        <!-- ========================================================= -->
+        <!-- COLUMNA IZQUIERDA: MATRIZ DE DÍAS Y CONTROLES DEL MES -->
+        <!-- ========================================================= -->
+        <div class="col-12 col-lg-7 col-xl-8">
+          
+          <!-- Barra de Control del Mes -->
+          <div class="calendar-control-bar">
+            <div class="calendar-month-indicator">
+              <i class="bi bi-calendar3 text-info"></i>
+              <span id="cal-month-title">Octubre 2026</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <button type="button" class="btn-cal-control" id="cal-month-prev" title="Mes Anterior">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+              <button type="button" class="btn-cal-today" id="cal-btn-today" title="Ir al día de hoy">
+                <i class="bi bi-dot"></i>Hoy
+              </button>
+              <button type="button" class="btn-cal-control" id="cal-month-next" title="Mes Siguiente">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="calendar-grid-wrapper">
+            <!-- Fila de Encabezados de Días de la Semana -->
+            <div class="calendar-weekdays-row">
+              <div>Lun</div>
+              <div>Mar</div>
+              <div>Mié</div>
+              <div>Jue</div>
+              <div>Vie</div>
+              <div>Sáb</div>
+              <div>Dom</div>
+            </div>
+
+            <!-- Matriz Dinámica del Calendario (Generada por scripts.js) -->
+            <div id="calendar-month-grid" class="calendar-month-grid">
+              <!-- Renderizado interactivo en JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- COLUMNA DERECHA: TARJETA BLANCA DE DETALLES DEL DÍA -->
+        <!-- ========================================================= -->
+        <div class="col-12 col-lg-5 col-xl-4">
+          <div class="calendar-sidebar-card">
+            
+            <!-- Cabecera Azul de Fecha Seleccionada -->
+            <div class="calendar-date-header-badge">
+              <div class="calendar-date-nav">
+                <button type="button" class="calendar-nav-btn" id="cal-prev-day-btn" title="Día Anterior">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+                <span id="cal-display-date">15 de Octubre 2026</span>
+                <button type="button" class="calendar-nav-btn" id="cal-next-day-btn" title="Día Siguiente">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </div>
+              <div>
+                <span id="cal-display-event-title" class="calendar-event-tag">
+                  <i class="bi bi-clock-fill"></i>
+                  <span>Ensayo - 20:00 PM</span>
+                </span>
+              </div>
+            </div>
+
+            <!-- Lista de Canciones del Día Seleccionado (Píldoras Cyan) -->
+            <div id="cal-day-songs-container" class="flex-grow-1 d-flex flex-column justify-content-start">
+              
+              <!-- Píldora de Canción por Defecto -->
+              <button 
+                type="button" 
+                class="calendar-song-pill" 
+                id="default-song-pill"
+                data-song-title="Bueno es alabarte" 
+                data-song-artist="Danilo Montero" 
+                data-audio-url="" 
+                data-pdf-url="" 
+                title="Reproducir pista de audio">
+                <div class="d-flex align-items-center gap-2 text-truncate">
+                  <i class="bi bi-music-note-beamed fs-5"></i>
+                  <div class="text-truncate text-start">
+                    <span class="d-block fw-bold text-truncate">Bueno es alabarte ...</span>
+                    <small class="opacity-75" style="font-size: 0.72rem;">Danilo Montero</small>
+                  </div>
+                </div>
+                <div class="pill-arrow-circle">
+                  <i class="bi bi-arrow-right"></i>
+                </div>
+              </button>
+
+            </div>
+
+            <!-- Botón de Acción para Programar Canción (Nivel 3) -->
+            {% if user.puede_editar_canciones %}
+            <div class="pt-3 mt-auto border-top border-light text-center">
+              <button class="btn btn-outline-primary w-100 rounded-pill py-2 fw-bold small d-flex align-items-center justify-content-center gap-2 shadow-sm" data-bs-toggle="modal" data-bs-target="#scheduleSongModal">
+                <i class="bi bi-plus-circle-fill"></i>
+                <span>Programar Tema en Calendario</span>
+              </button>
+            </div>
+            {% elif user.is_authenticated %}
+            <div class="pt-3 mt-auto border-top border-light text-center">
+              <button class="btn btn-outline-secondary w-100 rounded-pill py-2 fw-semibold small d-flex align-items-center justify-content-center gap-2 bg-light text-muted" data-bs-toggle="modal" data-bs-target="#readOnlyPermissionModal">
+                <i class="bi bi-shield-lock-fill text-warning"></i>
+                <span>Programar Tema (Sólo Lectura)</span>
+              </button>
+            </div>
+            {% endif %}
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+</div>
+
+<!-- ========================================================= -->
+<!-- MODAL: PROGRAMAR CANCIÓN EN EL CALENDARIO (NIVEL 3) -->
+<!-- ========================================================= -->
+{% if user.puede_editar_canciones %}
+<div class="modal fade" id="scheduleSongModal" tabindex="-1" aria-labelledby="scheduleSongModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content modal-content-clean">
+      <form method="POST" action="{% url 'calendar_event_create' %}">
+        {% csrf_token %}
+        <div class="modal-header modal-header-clean">
+          <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="scheduleSongModalLabel">
+            <i class="bi bi-calendar-plus-fill text-primary"></i>
+            <span>Programar Canción en Calendario</span>
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+        </div>
+
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            
+            <div class="col-12">
+              <label class="form-label text-muted small fw-bold">Canción del Repertorio *</label>
+              <select name="song" id="schedule-song-select" class="form-select form-select-clean" required>
+                <option value="">-- Elige una canción --</option>
+                {% for cancion in todas_canciones %}
+                  <option value="{{ cancion.id }}">{{ cancion.title }} ({{ cancion.artist }})</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted small fw-bold">Título del Evento / Ocasión *</label>
+              <input type="text" name="titulo" class="form-control form-control-clean" placeholder="Ej. Ensayo - 20:00 PM" value="Ensayo - 20:00 PM" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted small fw-bold">Fecha del Evento *</label>
+              <input type="date" name="fecha" id="schedule-event-date" class="form-control form-control-clean" value="{{ hoy|date:'Y-m-d' }}" required>
+            </div>
+
+            <div class="col-12">
+              <label class="form-label text-muted small fw-bold">Notas o Descripción del Ensayo</label>
+              <input type="text" name="descripcion" class="form-control form-control-clean" placeholder="Ej. Tonalidad Sol Mayor, puente instrumental">
+            </div>
+
+            <input type="hidden" name="es_activo" value="True">
+
+          </div>
+        </div>
+
+        <div class="modal-footer modal-footer-clean">
+          <button type="button" class="btn-secondary-clean" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn-primary-blue">
+            <i class="bi bi-calendar-check-fill"></i>
+            <span>Guardar en Calendario</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Datos de eventos serializados para el calendario dinámico -->
+<script id="calendar-events-data" type="application/json">
+  {{ eventos_json|safe }}
+</script>
+
+{% endblock %}
