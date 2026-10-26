@@ -232,25 +232,25 @@
         <div class="modal-body p-4">
           <div class="row g-3">
             <div class="col-12 col-md-7">
-              <label class="form-label text-muted small fw-bold">Título de la Canción *</label>
+              <label class="form-label text-muted small fw-bold">Título *</label>
               <input type="text" name="title" id="edit-song-title" class="form-control form-control-clean" required>
             </div>
 
             <div class="col-12 col-md-5">
-              <label class="form-label text-muted small fw-bold">Artista / Autor *</label>
+              <label class="form-label text-muted small fw-bold">Artista *</label>
               <input type="text" name="artist" id="edit-song-artist" class="form-control form-control-clean" required>
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label text-muted small fw-bold">
-                <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> Actualizar Partitura / Letra (PDF)
+                <i class="bi bi-file-earmark-pdf-fill text-danger me-1"></i> Letra (PDF)
               </label>
               <input type="file" name="file" accept=".pdf,.doc,.docx" class="form-control form-control-clean">
             </div>
 
             <div class="col-12 col-md-6">
               <label class="form-label text-muted small fw-bold">
-                <i class="bi bi-soundwave text-success me-1"></i> Actualizar Audio de Referencia
+                <i class="bi bi-soundwave text-success me-1"></i> Audio (MP3)
               </label>
               <input type="file" name="audio" accept="audio/*" class="form-control form-control-clean">
             </div>
@@ -263,7 +263,7 @@
             {% if all_tags %}
             <div class="col-12">
               <label class="form-label text-muted small fw-bold d-block mb-1">
-                <i class="bi bi-tags-fill text-primary me-1"></i> Categorías / Etiquetas
+                <i class="bi bi-tags-fill text-primary me-1"></i> Etiquetas
               </label>
               <div class="d-flex flex-wrap gap-2">
                 {% for t in all_tags %}
@@ -283,7 +283,7 @@
             <div class="col-12">
               <div class="form-check form-switch mt-2">
                 <input class="form-check-input" type="checkbox" name="is_active" id="editIsActiveCheck" checked>
-                <label class="form-check-label text-dark small fw-medium" for="editIsActiveCheck">Canción activa en el repertorio</label>
+                <label class="form-check-label text-dark small fw-medium" for="editIsActiveCheck">Activa en repertorio</label>
               </div>
             </div>
 

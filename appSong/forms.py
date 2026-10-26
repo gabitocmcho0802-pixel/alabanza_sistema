@@ -17,6 +17,15 @@ class SongForm(forms.ModelForm):
     class Meta:
         model = Song
         fields = ['title', 'artist', 'tags', 'file', 'audio', 'duration', 'is_active']
+        labels = {
+            'title': 'Título',
+            'artist': 'Artista',
+            'file': 'Letra (PDF)',
+            'audio': 'Audio (MP3)',
+            'duration': 'Duración',
+            'tags': 'Etiquetas',
+            'is_active': 'Activa',
+        }
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control form-control-clean',
@@ -104,6 +113,12 @@ class CalendarEventForm(forms.ModelForm):
     class Meta:
         model = CalendarEvent
         fields = ['song', 'titulo', 'fecha', 'descripcion', 'es_activo']
+        labels = {
+            'song': 'Canción',
+            'titulo': 'Título',
+            'fecha': 'Fecha',
+            'descripcion': 'Descripción',
+        }
         widgets = {
             'song': forms.Select(attrs={
                 'class': 'form-select form-select-clean',

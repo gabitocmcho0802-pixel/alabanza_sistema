@@ -232,9 +232,18 @@ const MusicPlayer = (function () {
 // 2. CALENDARIO DINÁMICO MEJORADO (CON NAVEGACIÓN Y EVENTOS)
 // =========================================================
 const CalendarApp = (function () {
-  let currentYear = 2026;
-  let currentMonth = 9; // Octubre (0-indexed: 9)
-  let selectedDate = '2026-10-15'; // 15 de Octubre 2026 por defecto como en el modelo
+  function getLocalDateString(d) {
+    const target = d || new Date();
+    const y = target.getFullYear();
+    const m = String(target.getMonth() + 1).padStart(2, '0');
+    const day = String(target.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  const initialNow = new Date();
+  let currentYear = initialNow.getFullYear();
+  let currentMonth = initialNow.getMonth();
+  let selectedDate = getLocalDateString(initialNow);
   let eventsData = [];
 
   const monthNames = [
@@ -253,6 +262,17 @@ const CalendarApp = (function () {
         eventsData = JSON.parse(dataTag.textContent.trim()) || [];
       } catch (e) {
         console.warn('Error leyendo calendar-events-data:', e);
+      }
+    }
+
+    // Sincronizar con la fecha de HOY provista por el servidor si está disponible
+    const serverToday = calendarGrid.dataset.today;
+    if (serverToday && serverToday.length === 10) {
+      selectedDate = serverToday;
+      const [sy, sm] = serverToday.split('-').map(Number);
+      if (!isNaN(sy) && !isNaN(sm)) {
+        currentYear = sy;
+        currentMonth = sm - 1;
       }
     }
 
@@ -282,7 +302,7 @@ const CalendarApp = (function () {
       nextDayBtn.addEventListener('click', () => changeDay(1));
     }
 
-    // Render inicial
+    // Render inicial con el día de HOY
     renderMonth(currentYear, currentMonth);
     selectDay(selectedDate);
   }
@@ -314,7 +334,7 @@ const CalendarApp = (function () {
     }
 
     // Días reales del mes actual
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = getLocalDateString(new Date());
 
     for (let day = 1; day <= daysInMonth; day++) {
       const dayCell = document.createElement('div');
@@ -507,7 +527,7 @@ const CalendarApp = (function () {
     const now = new Date();
     currentYear = now.getFullYear();
     currentMonth = now.getMonth();
-    const dateStr = now.toISOString().split('T')[0];
+    const dateStr = getLocalDateString(now);
 
     renderMonth(currentYear, currentMonth);
     selectDay(dateStr);

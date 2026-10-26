@@ -401,6 +401,27 @@ a:hover {
   border-color: rgba(255, 255, 255, 0.15);
 }
 
+/* Indicador visual para el día de HOY */
+.cal-day-cell.is-today {
+  position: relative;
+}
+
+.cal-day-cell.is-today::after {
+  content: 'HOY';
+  position: absolute;
+  top: 4px;
+  right: 6px;
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #38bdf8;
+}
+
+.cal-day-cell.is-today:not(.is-selected) {
+  border: 1.5px solid #38bdf8 !important;
+  background-color: rgba(56, 189, 248, 0.12) !important;
+}
+
 /* Casilla Seleccionada */
 .cal-day-cell.is-selected {
   background-color: #ffffff !important;
@@ -410,6 +431,15 @@ a:hover {
   transform: scale(1.05);
   z-index: 2;
   font-weight: 800;
+}
+
+.cal-day-cell.is-today.is-selected {
+  border: 2.5px solid #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.35), 0 8px 20px rgba(2, 132, 199, 0.3) !important;
+}
+
+.cal-day-cell.is-today.is-selected::after {
+  color: #0284c7;
 }
 
 .cal-day-cell.is-selected .cal-event-icon-badge {

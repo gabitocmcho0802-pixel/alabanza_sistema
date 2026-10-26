@@ -44,7 +44,7 @@
           <div class="calendar-control-bar">
             <div class="calendar-month-indicator">
               <i class="bi bi-calendar3 text-info"></i>
-              <span id="cal-month-title">Octubre 2026</span>
+              <span id="cal-month-title">{{ hoy|date:"F Y"|capfirst }}</span>
             </div>
             <div class="d-flex align-items-center gap-2">
               <button type="button" class="btn-cal-control" id="cal-month-prev" title="Mes Anterior">
@@ -72,7 +72,7 @@
             </div>
 
             <!-- Matriz Dinámica del Calendario (Generada por scripts.js) -->
-            <div id="calendar-month-grid" class="calendar-month-grid">
+            <div id="calendar-month-grid" class="calendar-month-grid" data-today="{{ hoy|date:'Y-m-d' }}">
               <!-- Renderizado interactivo en JS -->
             </div>
           </div>
@@ -91,44 +91,22 @@
                 <button type="button" class="calendar-nav-btn" id="cal-prev-day-btn" title="Día Anterior">
                   <i class="bi bi-chevron-left"></i>
                 </button>
-                <span id="cal-display-date">15 de Octubre 2026</span>
+                <span id="cal-display-date">{{ hoy|date:"j" }} de {{ hoy|date:"F Y"|capfirst }}</span>
                 <button type="button" class="calendar-nav-btn" id="cal-next-day-btn" title="Día Siguiente">
                   <i class="bi bi-chevron-right"></i>
                 </button>
               </div>
               <div>
                 <span id="cal-display-event-title" class="calendar-event-tag">
-                  <i class="bi bi-clock-fill"></i>
-                  <span>Ensayo - 20:00 PM</span>
+                  <i class="bi bi-calendar3"></i>
+                  <span>Cargando eventos...</span>
                 </span>
               </div>
             </div>
 
-            <!-- Lista de Canciones del Día Seleccionado (Píldoras Cyan) -->
+            <!-- Lista de Canciones del Día Seleccionado (Píldoras Dinámicas) -->
             <div id="cal-day-songs-container" class="flex-grow-1 d-flex flex-column justify-content-start">
-              
-              <!-- Píldora de Canción por Defecto -->
-              <button 
-                type="button" 
-                class="calendar-song-pill" 
-                id="default-song-pill"
-                data-song-title="Bueno es alabarte" 
-                data-song-artist="Danilo Montero" 
-                data-audio-url="" 
-                data-pdf-url="" 
-                title="Reproducir pista de audio">
-                <div class="d-flex align-items-center gap-2 text-truncate">
-                  <i class="bi bi-music-note-beamed fs-5"></i>
-                  <div class="text-truncate text-start">
-                    <span class="d-block fw-bold text-truncate">Bueno es alabarte ...</span>
-                    <small class="opacity-75" style="font-size: 0.72rem;">Danilo Montero</small>
-                  </div>
-                </div>
-                <div class="pill-arrow-circle">
-                  <i class="bi bi-arrow-right"></i>
-                </div>
-              </button>
-
+              <!-- Renderizado interactivo por scripts.js -->
             </div>
 
             <!-- Botón de Acción para Programar Canción (Nivel 3) -->
@@ -177,7 +155,7 @@
           <div class="row g-3">
             
             <div class="col-12">
-              <label class="form-label text-muted small fw-bold">Canción del Repertorio *</label>
+              <label class="form-label text-muted small fw-bold">Canción *</label>
               <select name="song" id="schedule-song-select" class="form-select form-select-clean" required>
                 <option value="">-- Elige una canción --</option>
                 {% for cancion in todas_canciones %}
@@ -187,17 +165,17 @@
             </div>
 
             <div class="col-12">
-              <label class="form-label text-muted small fw-bold">Título del Evento / Ocasión *</label>
+              <label class="form-label text-muted small fw-bold">Título *</label>
               <input type="text" name="titulo" class="form-control form-control-clean" placeholder="Ej. Ensayo - 20:00 PM" value="Ensayo - 20:00 PM" required>
             </div>
 
             <div class="col-12">
-              <label class="form-label text-muted small fw-bold">Fecha del Evento *</label>
+              <label class="form-label text-muted small fw-bold">Fecha *</label>
               <input type="date" name="fecha" id="schedule-event-date" class="form-control form-control-clean" value="{{ hoy|date:'Y-m-d' }}" required>
             </div>
 
             <div class="col-12">
-              <label class="form-label text-muted small fw-bold">Notas o Descripción del Ensayo</label>
+              <label class="form-label text-muted small fw-bold">Descripción</label>
               <input type="text" name="descripcion" class="form-control form-control-clean" placeholder="Ej. Tonalidad Sol Mayor, puente instrumental">
             </div>
 
